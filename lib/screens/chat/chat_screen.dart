@@ -341,17 +341,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                 }else{
 
                                 }
-
-                                // if(_formkey.currentState!.validate()){
-                                //   var _currTime1 = DateFormat('yyyy-MM-dd a hh:mm').format(DateTime.now());
-                                  // _formkey.currentState!.save();
-                                  //
-
-                                  //
-
-
-                                  // Navigator.pop(context);
-                                // }
                               },
                               child: Icon(Icons.send_rounded,color: Colors.black,),
                               style: ButtonStyle(

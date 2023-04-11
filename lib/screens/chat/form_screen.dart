@@ -7,6 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:jb_chat/screens/chat/list_screen.dart';
 
 class FormScreen extends StatefulWidget {
+  final User curUser;
+
+  FormScreen({required this.curUser});
 
   @override
   State<FormScreen> createState() => _FormScreenState();
@@ -22,7 +25,6 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   final db = FirebaseFirestore.instance;
-  final _curUserEmail = FirebaseAuth.instance.currentUser?.email;
 
   var _formkey = GlobalKey<FormState>();
   bool _isLock = false;
@@ -339,7 +341,7 @@ class _FormScreenState extends State<FormScreen> {
                                 ),
                                 onPressed: () async {
                                   if(_formkey.currentState!.validate()){
-                                    var _currTime1 = DateFormat('yyyy-MM-dd a hh:mm').format(DateTime.now());
+                                    var _currTime1 = DateFormat('yyyy-MM-dd a hh:mm:ss').format(DateTime.now());
                                     _formkey.currentState!.save();
 
                                     final roomData = {
@@ -350,9 +352,9 @@ class _FormScreenState extends State<FormScreen> {
                                       "totalCnt": _chatTotal!,
                                       "infomation": _chatInfo!,
                                       "recentChatTime": _currTime1,
-                                      "creatId" : _curUserEmail.toString(),
+                                      "creatId" : widget.curUser.email,
                                       "createTime" : _currTime1,
-                                      "joiner" : []
+                                      "joiner" : [widget.curUser.uid]
                                     };
 
                                     await db
