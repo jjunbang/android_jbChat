@@ -341,6 +341,9 @@ class _FormScreenState extends State<FormScreen> {
                                 ),
                                 onPressed: () async {
                                   if(_formkey.currentState!.validate()){
+                                    final now = DateTime.now();
+                                    final docId = '${widget.curUser.email}_${now.microsecondsSinceEpoch}';
+
                                     var _currTime1 = DateFormat('yyyy-MM-dd a hh:mm:ss').format(DateTime.now());
                                     _formkey.currentState!.save();
 
@@ -359,7 +362,18 @@ class _FormScreenState extends State<FormScreen> {
 
                                     await db
                                         .collection("chatList")
-                                        .doc().set(roomData);
+                                        .doc(docId).set(roomData);
+
+                                    final joinData = {
+                                      "title": _chatTitle!,
+                                      "recentJoinTime": _currTime1,
+                                    };
+
+                                    await db
+                                        .collection("userData")
+                                        .doc(widget.curUser.uid)
+                                        .collection("joinList")
+                                        .doc(docId).set(joinData);
 
                                     Navigator.pop(context);
                                   }

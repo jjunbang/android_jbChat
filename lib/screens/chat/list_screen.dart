@@ -73,7 +73,8 @@ class _ChatListsState extends State<ChatLists>{
                                       child: Text('채팅방',
                                         style: TextStyle(
                                             fontSize: 20,
-                                            color: Provider.of<PageModel>(context).pageInfo == 0? Colors.white : Colors.black
+                                            color: Provider.of<PageModel>(context).pageInfo == 0? Colors.white : Colors.black,
+                                            fontWeight: Provider.of<PageModel>(context).pageInfo == 0? FontWeight.bold : FontWeight.normal,
                                         ),
                                       )
                                   )
@@ -98,7 +99,8 @@ class _ChatListsState extends State<ChatLists>{
                                     child: Text('참여중',
                                         style: TextStyle(
                                             fontSize: 20,
-                                            color: Provider.of<PageModel>(context).pageInfo == 1? Colors.white : Colors.black
+                                            color: Provider.of<PageModel>(context).pageInfo == 1? Colors.white : Colors.black,
+                                            fontWeight: Provider.of<PageModel>(context).pageInfo == 1? FontWeight.bold : FontWeight.normal,
                                         ),
                                     )
                                   )

@@ -36,6 +36,14 @@ class _EntryListsState extends State<EntryLists>{
   int _listInfo = 0;
   String _joinPasswd = '';
 
+  // Future<QuerySnapshot<Object?>> test(testval) async{
+  //   QuerySnapshot  querySnapshot
+  //   = await db.collection("userData").
+  //   doc(widget.currUser.uid).
+  //   collection('joinList').where('recentJoinTime', isLessThan: testval).get();
+  //
+  //   return querySnapshot;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +52,8 @@ class _EntryListsState extends State<EntryLists>{
       child: Scaffold(
         body: Container(
           child: StreamBuilder(
-              stream: db.collection('chatList').orderBy('createTime').snapshots(),
+              // stream: db.collection('chatList').orderBy('createTime').snapshots(),
+              stream: db.collection('chatList').where('joiner', arrayContains: widget.currUser.uid).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
@@ -55,22 +64,39 @@ class _EntryListsState extends State<EntryLists>{
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length ,
                   itemBuilder: ((context, index) {
-                    List<dynamic> joinerList = snapshot.data!.docs[index]['joiner'];
-                    bool _joinChk = false;
-                    for (var joinerUid in joinerList) {
-                      // print('test1 : $joinerUid / $widget.currUser.uid');
-                      if (joinerUid == widget.currUser.uid) {
-                        // print('test2 : '+_joinChk.toString());
-                        _joinChk = true;
-                        break;
-                      }
-                    }
+                    final parentDoc = snapshot.data!.docs[index];
+                    // test();
+                    // CollectionReference join
+                    // =
 
-                    if(_joinChk == true){
+                    // DocumentSnapshot joinSnapshot = join.doc().get();
+
+
+                    // var joinTime = joinDocRef.snapshots().toString();
+
                       return GestureDetector(
                         onTap: (){
                           Provider.of<ListModel>(context, listen: false ).changeListinfo(_listInfo == index+1 ? 0 : index+1);
                           _listInfo = _listInfo == index+1 ? 0 : index+1;
+                        },
+                        onDoubleTap: () async{
+                          var _currTime1 = DateFormat('yyyy-MM-dd a hh:mm:ss').format(DateTime.now());
+                          DocumentReference joinDocRef =
+                              db.collection("userData").doc(widget.currUser.uid).collection("joinList").doc(parentDoc.id);
+                          // final data = parentDoc.id;
+
+                           // print('${joinTime}');
+
+                          await joinDocRef.update({
+                            'recentJoinTime':_currTime1,
+                          });
+
+                          // await Navigator.push(context,
+                          //     MaterialPageRoute(
+                          //       builder:(context) =>
+                          //           ChatScreen(chatId: snapshot.data!.docs[index].id,currUser: widget.currUser),
+                          //     )
+                          // );
                         },
                         child: Column(
                           children: [
@@ -111,163 +137,7 @@ class _EntryListsState extends State<EntryLists>{
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
                                       Text('최근 대화 시간 : '+snapshot.data!.docs[index]['recentChatTime']),
-                                      if(_joinChk == false)
-                                        TextButton(
-                                            onPressed: (){
-                                              _joinPasswd = '';
-
-                                              if(snapshot.data!.docs[index]['isLock'] == "true"){
-                                                var showContext = context;
-                                                showDialog(
-                                                    context: context,
-                                                    barrierDismissible: true, // 바깥 영역 터치시 닫을지 여부
-                                                    builder: (showContext) {
-                                                      // FocusScope.of(context).requestFocus(_joinPasswdFocus);
-                                                      return AlertDialog(
-                                                        content: Container(
-                                                          height: 140,
-                                                          child: Column(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                                                            children: [
-                                                              Text('비밀번호',
-                                                                style: TextStyle(fontWeight: FontWeight.bold,),
-                                                              ),
-                                                              Text('비밀번호 입력이 필요한 비공개 채팅방 입니다.',
-                                                                style: TextStyle(color: Colors.grey,fontSize: 14),
-                                                              ),
-                                                              TextField(
-                                                                focusNode: _joinPasswdFocus,
-                                                                onChanged: (val){
-                                                                  _joinPasswd = val;
-                                                                },
-                                                              ),
-                                                              Row(
-                                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                                children: [
-                                                                  TextButton(
-                                                                    child: const Text('취소',style: TextStyle(fontWeight: FontWeight.bold,),),
-                                                                    onPressed: () {
-                                                                      Navigator.of(showContext).pop();
-                                                                    },
-                                                                  ),
-                                                                  TextButton(
-                                                                    child: const Text('확인',style: TextStyle(fontWeight: FontWeight.bold,),),
-                                                                    onPressed: () async {
-                                                                      if(_joinPasswd.isEmpty || _joinPasswd == ''){
-                                                                        ScaffoldMessenger.of(showContext).showSnackBar(
-                                                                            SnackBar(
-                                                                              content: Text('비밀번호를 입력해주세요.'),
-                                                                              backgroundColor: Colors.redAccent,
-                                                                            )
-                                                                        );
-                                                                        FocusScope.of(showContext).requestFocus(_joinPasswdFocus);
-                                                                      }else{
-                                                                        String _realPasswd = snapshot.data!.docs[index].get('password').toString();
-                                                                        if(_joinPasswd == _realPasswd){
-                                                                          final parentDoc = snapshot.data!.docs[index];
-                                                                          final _userInfo = widget.currUser.uid;
-
-                                                                          Navigator.of(showContext).pop();
-
-                                                                          int _currCnt = int.parse(parentDoc.get('currCnt').toString()) + 1;
-                                                                          List<dynamic> joinerList = snapshot.data!.docs[index].get('joiner');
-                                                                          joinerList.add(_userInfo);
-                                                                          await parentDoc.reference.update({
-                                                                            'currCnt':_currCnt.toString(),
-                                                                            'joiner':joinerList
-                                                                          });
-
-                                                                          Navigator.push(context,
-                                                                              MaterialPageRoute(
-                                                                                builder:(context) =>
-                                                                                    ChatScreen(chatId: snapshot.data!.docs[index].id, currUser: widget.currUser),
-                                                                              )
-                                                                          );
-
-                                                                        }else{
-                                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                                              SnackBar(
-                                                                                content: Text('비밀번호를 확인해주세요.'),
-                                                                                backgroundColor: Colors.redAccent,
-                                                                              )
-                                                                          );
-                                                                          FocusScope.of(context).requestFocus(_joinPasswdFocus);
-                                                                        }
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      );
-                                                    }
-                                                );
-                                              }else{
-                                                var showContext = context;
-                                                showDialog(
-                                                  barrierDismissible: true,
-                                                  context: context,
-                                                  builder: (showContext) {
-                                                    return AlertDialog(
-                                                      content: Container(
-                                                        height: 85,
-                                                        child: Column(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                                                          children: [
-                                                            Text('입장 하시겠습니까?'),
-                                                            SizedBox(height: 10,),
-                                                            Row(
-                                                              mainAxisAlignment: MainAxisAlignment.end,
-                                                              children: [
-                                                                TextButton(
-                                                                    onPressed: (){
-                                                                      Navigator.of(showContext).pop();
-                                                                    },
-                                                                    child: Text('취소',style: TextStyle(fontWeight: FontWeight.bold,),)
-                                                                ),
-                                                                TextButton(
-                                                                    onPressed: () async {
-                                                                      final parentDoc = snapshot.data!.docs[index];
-                                                                      final _userInfo = widget.currUser.uid;
-
-
-                                                                      Navigator.of(showContext).pop();
-
-                                                                      int _currCnt = int.parse(parentDoc.get('currCnt').toString()) + 1;
-                                                                      List<dynamic> joinerList = snapshot.data!.docs[index].get('joiner');
-                                                                      joinerList.add(_userInfo);
-                                                                      await parentDoc.reference.update({
-                                                                        'currCnt':_currCnt.toString(),
-                                                                        'joiner':joinerList
-                                                                      });
-
-                                                                      await Navigator.push(context,
-                                                                          MaterialPageRoute(
-                                                                            builder:(context) =>
-                                                                                ChatScreen(chatId: snapshot.data!.docs[index].id,currUser: widget.currUser),
-                                                                          )
-                                                                      );
-                                                                    },
-                                                                    child: const Text('확인',style: TextStyle(fontWeight: FontWeight.bold,),)
-                                                                ),
-                                                              ],
-                                                            )
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                );
-                                              }
-                                            },
-                                            child: Text('참가')
-                                        ),
-                                      if(_joinChk == true)
-                                        const Text('참여중',style: TextStyle(color: Colors.yellow),)
+                                      const Text('참여중',style: TextStyle(color: Colors.yellow),)
                                     ],
                                   ),
                                   Visibility(
@@ -297,9 +167,6 @@ class _EntryListsState extends State<EntryLists>{
                           ],
                         ),
                       );
-                    }else{
-                      return Container();
-                    }
 
                   }),
                 );
